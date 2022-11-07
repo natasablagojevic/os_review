@@ -11,6 +11,11 @@
 #include<sys/mman.h>
 #include<sys/wait.h>
 #include<pthread.h>
+#include<time.h>
+#include<string.h>
+#include<math.h>
+#include<ctype.h>
+#include<stdbool.h>
 
 #define UNUSED(X) (void)(X)
 #define RD_END 0
