@@ -1,4 +1,3 @@
-#define _XOPEN_SOURCE 700
 #include<stdio.h>
 #include<stdlib.h>
 #include<limits.h>
@@ -22,9 +21,20 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
+// a.out dir
 int main(int argc, char **argv)
 {
+    if (argc != 2)
+        greska("args failed");
 
+    struct stat sb;
+    if (stat(argv[1], &sb) == -1)
+        greska("stat failed");
+
+    if (!S_ISDIR(sb.st_mode))
+        greska("nije dir");
+
+    
 
 
     exit(EXIT_SUCCESS);
