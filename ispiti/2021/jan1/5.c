@@ -36,7 +36,7 @@ void greska(const char *msg)
 
 void *get_memory_block(char *path, unsigned *size)
 {
-    int fd = shm_open(path, o_RDWR, 0600);
+    int fd = shm_open(path, O_RDWR, 0600);
         if (fd == -1)
             greska("shm_open failed");
 
