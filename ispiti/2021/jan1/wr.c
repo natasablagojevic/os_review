@@ -23,7 +23,7 @@
 
 typedef struct 
 {
-    sem_t inDataReady;
+    sem_t inDataready;
     sem_t dataProcessed;
     char str[1024];
 } OsInputData;
@@ -34,19 +34,16 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-void *get_memory_block(char *path, unsigned *size)
+void *create_memory_block(char *path, unsigned size)
 {
-    int fd = shm_open(path, o_RDWR, 0600);
+    int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
         if (fd == -1)
             greska("shm_open failed");
 
-    struct stat sb;
-    if (fstat(fd, &sb) == -1)
-        greska("fstat failed");
+    if (ftruncate(fd, size) == -1)
+        greska("ftruncate failed");
 
-    *size = sb.st_size;
-
-    void *addr = mmap(NULL, *size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    void *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
         if (addr == MAP_FAILED)
             greska("mmap failed");
 
@@ -54,40 +51,24 @@ void *get_memory_block(char *path, unsigned *size)
     return addr;
 }
 
-void zameni(char *str)
-{
-    int n = strlen(str);
-    for (int i = 0; i < n; i++)
-        if (islower(str[i]))
-            str[i] = toupper(str[i]);
-        else if (isupper(str[i]))
-            str[i] = tolower(str[i]);
-    
-}
-
 int main(int argc, char **argv)
 {
     if (argc != 2)
-        greska("args failed");
+        greska("argc failed");
 
-    unsigned size =0;
-    OsInputData *p = get_memory_block(argv[1], &size);
-
-    if (sem_init(&(p->inDataReady), 1, 1) == -1)
+    OsInputData *p = create_memory_block(argv[1], sizeof(OsInputData));
+    
+    if (sem_init(&(p->inDataready), 1, 0) == -1)
         greska("sem_init failed");
 
-    zameni(p->str);
-    printf("%s\n", p->str);
+    
+    strcpy(p->str, "NaTaSa");
 
     if (sem_post(&(p->dataProcessed)) == -1)
         greska("sem_post failed");
 
-    if (munmap(p, size) == -1)
+    if (munmap(p, sizeof(OsInputData)) == -1)
         greska("munmap failed");
-
-    if (shm_unlink(argv[1]) == -1)
-        greska("shm_unlink failed");
-
 
     exit(EXIT_SUCCESS);
 }
