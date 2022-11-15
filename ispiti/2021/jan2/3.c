@@ -61,7 +61,7 @@ int main(int argc, char **argv)
             if (strcmp(argv[1], ekstenzija) == 0)
                 brojac++;
 
-            free(buf);
+            // free(buf);
         }
 
         printf("%d\n", brojac);
