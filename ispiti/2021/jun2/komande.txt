@@ -1,0 +1,4 @@
+ls -l
+tail fajl.txt
+stat .
+head 1.txt
