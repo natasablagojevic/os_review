@@ -34,16 +34,19 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-void *create_memory_block(char *path, unsigned size)
+void *get_memeory_block(char *path, unsigned *size)
 {
-    int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
+    int fd = shm_open(path, O_RDWR, 0600);
         if (fd == -1)
-            greska("shm_open failed");
+            greska("shm_opend failed");
 
-    if (ftruncate(fd, size) == -1)
-        greska("ftruncate failed");
+    struct stat sb;
+    if (fstat(fd, &sb) == -1)
+        greska("fstat failed");
 
-    void *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    *size = sb.st_size;
+
+    void *addr = mmap(NULL, *size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
         if (addr == MAP_FAILED)
             greska("mmap failed");
 
@@ -51,24 +54,36 @@ void *create_memory_block(char *path, unsigned size)
     return addr;
 }
 
+void converte(char *s)
+{
+    int n = strlen(s);
+    for (int i = 0; i < n; i++)
+        if (isdigit(s[i]))
+            s[i] = '#';
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2)
-        greska("argc failed");
+        greska("args failed");
 
-    OsInputData *p = create_memory_block(argv[1], sizeof(OsInputData));
-    
-    if (sem_init(&(p->inDataready), 1, 0) == -1)
+    unsigned size = 0;
+    OsInputData *p = get_memeory_block(argv[1], &size);
+
+    if (sem_init(&(p->inDataready), 1, 1) == -1)
         greska("sem_init failed");
 
-    
-    strcpy(p->str, "nAtAsA");
+    converte(p->str);
+    fprintf(stderr, "%s\n", p->str);
 
     if (sem_post(&(p->dataProcessed)) == -1)
         greska("sem_post failed");
 
-    if (munmap(p, sizeof(OsInputData)) == -1)
+    if (munmap(p, size) == -1)
         greska("munmap failed");
+
+    if (shm_unlink(argv[1]) == -1)
+        greska("shm_unlink failed");
 
     exit(EXIT_SUCCESS);
 }

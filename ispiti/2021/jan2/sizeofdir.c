@@ -23,53 +23,40 @@
 #define RD_END 0
 #define WR_END 1
 
-char *s = NULL;
-
 void greska(const char *msg)
 {
     perror(msg);
     exit(EXIT_FAILURE);
 }
 
-char *substring(char *dest, char *src, int begin, int n)
-{
-    while (n > 0) {
-        *dest = *(src + begin);
+unsigned size = 0;
 
-        dest++;
-        src++;
-        n--;
-    }
-
-    *dest = 0;
-    
-    return dest - (n-begin);
-}
-
-void f(char *path)
+void f(char *putanja)
 {
     struct stat sb;
-    if (lstat(path, &sb) == -1)
-        greska("lstat");
-    
-    if (!S_ISDIR(sb.st_mode))   
+    if (lstat(putanja, &sb) == -1)
+        greska("lstat failed");
+
+    size += sb.st_size;
+
+    if (!S_ISDIR(sb.st_mode))
         return ;
 
-    printf("%s:\n", path);
+    printf("ROOT: %s:\n", putanja);
 
-    DIR *dir = opendir(path);
+    DIR *dir = opendir(putanja);
         if (dir == NULL)
             greska("opendir failed");
 
-    struct dirent *dirEntry = NULL;
+    struct dirent *dirEntry = NULL;   
     errno = 0;
 
     while ((dirEntry = readdir(dir)) != NULL) {
-        char *nova = malloc(strlen(dirEntry->d_name) + strlen(path) + 2);
+        char *nova = malloc(strlen(dirEntry->d_name) + strlen(putanja) + 1);
             if (nova == NULL)
                 greska("nova malloc failed");
 
-        strcpy(nova, path);
+        strcpy(nova, putanja);
         strcat(nova, "/");
         strcat(nova, dirEntry->d_name);
 
@@ -77,9 +64,9 @@ void f(char *path)
 
         if (strcmp(dirEntry->d_name, ".") != 0 && strcmp(dirEntry->d_name, "..") != 0) {
             if (stat(nova, &sb) == -1)
-                greska("f:\tstat failed");
+                greska("stat failed 2");
 
-            // magija
+            size += sb.st_size;
 
             free(nova);
             errno = 0;
@@ -98,34 +85,11 @@ void f(char *path)
         greska("closedir failed");
 }
 
-// a.out dir s
 int main(int argc, char **argv)
 {
-
-/* 
-    char *dest = malloc(100);
-
-    int i = 0;
-    substring(dest, "dir.bla", i++, strlen("bla"));
-
-    while (strcmp(dest, "bla") != 0) 
-        substring(dest, "dir.bla", ++i, strlen("bla"));
-    printf("%s\n", dest);
-
- */   
-
-    if (argc != 3)
-        greska("args failed");
-
-    s = malloc(strlen(argv[2]) + 1);
-        if (s == NULL)
-            greska("s malloc failed");
-    
-    strcpy(s, argv[2]);
 
     f(argv[1]);
 
 
-    free(s);
     exit(EXIT_SUCCESS);
 }

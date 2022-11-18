@@ -23,7 +23,7 @@
 
 typedef struct 
 {
-    sem_t inDataready;
+    sem_t inDataReady;
     sem_t dataProcessed;
     char str[1024];
 } OsInputData;
@@ -54,21 +54,21 @@ void *create_memory_block(char *path, unsigned size)
 int main(int argc, char **argv)
 {
     if (argc != 2)
-        greska("argc failed");
+        greska("args failed");
 
     OsInputData *p = create_memory_block(argv[1], sizeof(OsInputData));
-    
-    if (sem_init(&(p->inDataready), 1, 0) == -1)
+
+    if (sem_init(&(p->inDataReady), 1, 0) == -1)
         greska("sem_init failed");
 
-    
-    strcpy(p->str, "nAtAsA");
+    strcpy(p->str, "ana1234adh55sda6dsf5asf8a68");
 
     if (sem_post(&(p->dataProcessed)) == -1)
         greska("sem_post failed");
 
     if (munmap(p, sizeof(OsInputData)) == -1)
         greska("munmap failed");
+
 
     exit(EXIT_SUCCESS);
 }
