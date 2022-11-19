@@ -47,6 +47,8 @@ int main(int argc, char **argv)
     while (getline(&linija, &velicina, f) != -1) {
         sscanf(linija, "%s", komanda);
 
+        printf("komanda: %s\n", komanda);
+
         int cld2Par[2];
         if (pipe(cld2Par) == -1)
             greska("pipe failed");
