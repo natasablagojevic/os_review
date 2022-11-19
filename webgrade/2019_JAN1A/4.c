@@ -107,7 +107,6 @@ int main(int argc, char **argv)
             if (childPid == -1)
                 greska("fork failed");
 
-
         if (childPid == 0) {
             /* CHILD */
             close(cld2Par[RD_END]);
