@@ -69,5 +69,6 @@ int main(int argc, char **argv)
     get_meseci(vreme->tm_mon);
     printf("\n");
 
+
     exit(EXIT_SUCCESS);
 }
