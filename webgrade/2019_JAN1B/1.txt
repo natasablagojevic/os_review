@@ -1,0 +1,4 @@
+rm .
+stat ...
+ls -l
+ls adir

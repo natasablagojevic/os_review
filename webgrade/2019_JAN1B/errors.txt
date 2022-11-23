@@ -1,0 +1,4 @@
+rm: cannot remove '.': Is a directory
+stat: cannot statx '...': No such file or directory
+rm: cannot remove '.': Is a directory
+stat: cannot statx '...': No such file or directory

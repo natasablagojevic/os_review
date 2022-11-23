@@ -90,8 +90,10 @@ int main(int argc, char **argv)
         fscanf(f, "%s%s", komande[i], argumenti[i]);
     }
 
-    // for (int i = 0; i < n; i++)
-    //     printf("%s %s\n", komande[i], argumenti[i]);
+    printf("------------\n");
+    for (int i = 0; i < n; i++)
+        printf("%s %s\n", komande[i], argumenti[i]);
+    printf("------------\n");
 
     for (int i = 0; i < n; i++) {
         int cld2Par[2];
@@ -107,14 +109,14 @@ int main(int argc, char **argv)
             /* CHILD */
             close(cld2Par[RD_END]);
 
-            if (dup2(cld2Par[WR_END], STDOUT_FILENO) == -1)
+            if (dup2(cld2Par[WR_END], STDERR_FILENO) == -1)
                 greska("dup2 failed");
 
             if (execlp(komande[i], komande[i], argumenti[i], NULL) == -1)
                 greska("execlp failed"); 
 
             close(cld2Par[WR_END]);
-            exit(EXIT_FAILURE);
+            exit(EXIT_SUCCESS);
         } 
         /* PARENT */
 
@@ -126,16 +128,31 @@ int main(int argc, char **argv)
 
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status) == EXIT_FAILURE) {
-                // fprintf(stderr, "neuspeh\n");
+                /* // fprintf(stderr, "neuspeh\n");
                 
-                char buf[4095];
-                int read_bytes = 0;
+                // char buf[4095];
+                // int read_bytes = 0;
+                // int fd = fileno(err);
+                //     if (fd == -1)
+                //         greska("fileno failed");
+
+                // while ((read_bytes = read(cld2Par[RD_END], buf, 4095)) > 0) {
+                //     fprintf(stderr, "buf: %s\n", buf);
+                //     if (write(fd, buf, read_bytes) == -1)
+                //         greska("write failed");
+                // }
+
+                // if (read_bytes == -1)
+                //     greska("read failed"); */
+
                 int fd = fileno(err);
                     if (fd == -1)
                         greska("fileno failed");
+                char buf[4095];
+                int read_bytes = 0;
 
                 while ((read_bytes = read(cld2Par[RD_END], buf, 4095)) > 0) {
-                    fprintf(stderr, "buf: %s\n", buf);
+                    printf("buf: %s\n", buf);
                     if (write(fd, buf, read_bytes) == -1)
                         greska("write failed");
                 }
@@ -143,6 +160,7 @@ int main(int argc, char **argv)
                 if (read_bytes == -1)
                     greska("read failed");
 
+                // fprintf(err, "%s\n", buf);
             } 
 
             // if (WEXITSTATUS(status) == EXIT_SUCCESS)
@@ -150,7 +168,6 @@ int main(int argc, char **argv)
         }
 
         close(cld2Par[RD_END]);
-        // close(cld2Par[R])
     }
 
 
