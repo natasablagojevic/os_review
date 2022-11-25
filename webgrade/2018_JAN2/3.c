@@ -27,20 +27,18 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-// a.out fajl -w/-l/-c
+// a.out fajl a
 int main(int argc, char **argv)
 {
-    if (argc != 3)
+    if (argc != 3) {
+        fprintf(stdout, "Neuspeh\n");
         greska("args failed");
-
-    if (strcmp(argv[2], "-w") != 0 && strcmp(argv[2], "-l") != 0 && strcmp(argv[2], "-c") != 0) {
-        fprintf(stdout, "Neuspeh\n");
-        exit(EXIT_SUCCESS);
     }
-
+    
     struct stat sb;
-    if (stat(argv[1], &sb) == -1) {
+    if (stat(argv[1], &sb) == -1){
         fprintf(stdout, "Neuspeh\n");
+        // greska("stat");
         exit(EXIT_SUCCESS);
     }
 
@@ -59,7 +57,7 @@ int main(int argc, char **argv)
         if (dup2(cld2Par[WR_END], STDOUT_FILENO) == -1)
             greska("dup2 failed");
 
-        if (execlp("wc", "wc", argv[2], argv[1], NULL) == -1)
+        if (execlp("tail", "tail", "-n", argv[2], argv[1], NULL) == -1)
             greska("execlp failed");
 
         close(cld2Par[WR_END]);
@@ -75,21 +73,11 @@ int main(int argc, char **argv)
         char *linija = NULL;
         size_t size = 0;
 
-        if (getline(&linija, &size, f) == -1)
-            greska("getline failed");
+        while (getline(&linija, &size, f) != -1)
+            printf("%s", linija);
 
-        char result[1024];
-        int k = 0;
-        for (int i = 0; linija[i] != 0; i++) {
-            if (isspace(linija[i]))
-                break;
-
-            result[k++] = linija[i];
-        }
-
-        result[k] = 0;
-        printf("%s\n", result);
-
+        free(linija);
+        fclose(f);
         close(cld2Par[RD_END]);
     }
 
@@ -101,7 +89,7 @@ int main(int argc, char **argv)
         if (WEXITSTATUS(status) == EXIT_FAILURE)
             fprintf(stdout, "Neuspeh\n");
         else 
-            fprintf(stderr, "Uspeh\n");
+            fprintf(stderr, "uspeh\n");
     } else {
         fprintf(stdout, "Neuspeh\n");
     }

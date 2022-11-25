@@ -27,16 +27,11 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-// a.out fajl -w/-l/-c
+// a.out putanja
 int main(int argc, char **argv)
 {
-    if (argc != 3)
+    if (argc != 2)
         greska("args failed");
-
-    if (strcmp(argv[2], "-w") != 0 && strcmp(argv[2], "-l") != 0 && strcmp(argv[2], "-c") != 0) {
-        fprintf(stdout, "Neuspeh\n");
-        exit(EXIT_SUCCESS);
-    }
 
     struct stat sb;
     if (stat(argv[1], &sb) == -1) {
@@ -52,19 +47,7 @@ int main(int argc, char **argv)
         if (childPid == -1)
             greska("fork failed");
 
-    if (childPid == 0) {
-        /* CHILD */
-        close(cld2Par[RD_END]);
-
-        if (dup2(cld2Par[WR_END], STDOUT_FILENO) == -1)
-            greska("dup2 failed");
-
-        if (execlp("wc", "wc", argv[2], argv[1], NULL) == -1)
-            greska("execlp failed");
-
-        close(cld2Par[WR_END]);
-        exit(EXIT_FAILURE);
-    } else {
+    if (childPid > 0) {
         /* PARENT */
         close(cld2Par[WR_END]);
 
@@ -74,23 +57,37 @@ int main(int argc, char **argv)
 
         char *linija = NULL;
         size_t size = 0;
+        char pom1[1024];
+        char pom2[1024];
+        char velicina[1024];
 
-        if (getline(&linija, &size, f) == -1)
-            greska("getline failed");
+        while (getline(&linija, &size, f) != -1) {
+            sscanf(linija, "%s%s", pom1, pom2);
 
-        char result[1024];
-        int k = 0;
-        for (int i = 0; linija[i] != 0; i++) {
-            if (isspace(linija[i]))
+            // printf("pom1: %s\tpom2: %s\n", pom1, pom2);
+
+            if (strcmp(pom1, "Size:") == 0) {
+                strcpy(velicina, pom2);
                 break;
-
-            result[k++] = linija[i];
+            }
         }
 
-        result[k] = 0;
-        printf("%s\n", result);
+        printf("%s\n", velicina);
 
+        free(linija);
+        fclose(f);
         close(cld2Par[RD_END]);
+    } else {
+        /* CHILD */
+        close(cld2Par[RD_END]);
+
+        if (dup2(cld2Par[WR_END], STDOUT_FILENO) == -1)
+            greska("dup2 failed");
+
+        if (execlp("stat", "stat", argv[1], NULL) == -1)
+            greska("execlp failed");
+        
+        close(cld2Par[WR_END]);
     }
 
     int status = 0;
@@ -102,10 +99,11 @@ int main(int argc, char **argv)
             fprintf(stdout, "Neuspeh\n");
         else 
             fprintf(stderr, "Uspeh\n");
-    } else {
+    } else 
         fprintf(stdout, "Neuspeh\n");
-    }
 
 
+    close(cld2Par[RD_END]);
+    close(cld2Par[WR_END]);
     exit(EXIT_SUCCESS);
 }

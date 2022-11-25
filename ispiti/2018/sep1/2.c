@@ -21,28 +21,42 @@
 #define RD_END 0
 #define WR_END 1
 
+#define MAX 1024
+
 void greska(const char *msg)
 {
     perror(msg);
     exit(EXIT_FAILURE);
 }
 
-// a.out fajl -w/-l/-c
+// a.out cat 1.txt
 int main(int argc, char **argv)
 {
-    if (argc != 3)
+    if (argc <= 1)
         greska("args failed");
 
-    if (strcmp(argv[2], "-w") != 0 && strcmp(argv[2], "-l") != 0 && strcmp(argv[2], "-c") != 0) {
-        fprintf(stdout, "Neuspeh\n");
-        exit(EXIT_SUCCESS);
+    int n = argc - 1;
+    char **komande = malloc(n * sizeof(char *));
+        if (komande == NULL)
+            greska("komande malloc failed");
+
+    for (int i = 0; i < n; i++) {
+        komande[i] = malloc(MAX);
+            if (komande[i] == NULL) {
+                for (int j = 0; j < i; j++)
+                    free(komande[j]);
+                free(komande);
+                greska("komande[i] malloc failed");
+            }
     }
 
-    struct stat sb;
-    if (stat(argv[1], &sb) == -1) {
-        fprintf(stdout, "Neuspeh\n");
-        exit(EXIT_SUCCESS);
-    }
+    for (int i = 0; i < n; i++)
+        strcpy(komande[i], argv[i+1]);
+
+    // printf("\n");
+    // for (int i = 0; i < n; i++)
+    //     printf("%s ", komande[i]);
+    // printf("\n");
 
     int cld2Par[2];
     if (pipe(cld2Par) == -1)
@@ -52,19 +66,7 @@ int main(int argc, char **argv)
         if (childPid == -1)
             greska("fork failed");
 
-    if (childPid == 0) {
-        /* CHILD */
-        close(cld2Par[RD_END]);
-
-        if (dup2(cld2Par[WR_END], STDOUT_FILENO) == -1)
-            greska("dup2 failed");
-
-        if (execlp("wc", "wc", argv[2], argv[1], NULL) == -1)
-            greska("execlp failed");
-
-        close(cld2Par[WR_END]);
-        exit(EXIT_FAILURE);
-    } else {
+    if (childPid > 0) {
         /* PARENT */
         close(cld2Par[WR_END]);
 
@@ -72,25 +74,29 @@ int main(int argc, char **argv)
             if (f == NULL)
                 greska("fdopen failed");
 
+        int brojac = 0;
         char *linija = NULL;
         size_t size = 0;
 
-        if (getline(&linija, &size, f) == -1)
-            greska("getline failed");
+        while (getline(&linija, &size, f) != -1)
+            brojac++;
 
-        char result[1024];
-        int k = 0;
-        for (int i = 0; linija[i] != 0; i++) {
-            if (isspace(linija[i]))
-                break;
+        printf("%d\n", brojac);
 
-            result[k++] = linija[i];
-        }
-
-        result[k] = 0;
-        printf("%s\n", result);
-
+        free(linija);
         close(cld2Par[RD_END]);
+    } else {
+        /* CHILD */
+        close(cld2Par[RD_END]);
+
+        if (dup2(cld2Par[WR_END], STDOUT_FILENO) == -1)
+            greska("dup2 failed");
+
+        if (execvp(komande[0], komande) == -1)
+            greska("execvp failed");
+
+        close(cld2Par[WR_END]);
+        exit(EXIT_FAILURE);
     }
 
     int status = 0;
@@ -102,10 +108,11 @@ int main(int argc, char **argv)
             fprintf(stdout, "Neuspeh\n");
         else 
             fprintf(stderr, "Uspeh\n");
-    } else {
+    } else 
         fprintf(stdout, "Neuspeh\n");
-    }
 
 
+    close(cld2Par[RD_END]);
+    close(cld2Par[WR_END]);
     exit(EXIT_SUCCESS);
 }
