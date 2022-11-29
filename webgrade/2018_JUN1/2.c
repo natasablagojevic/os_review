@@ -21,6 +21,11 @@
 #define RD_END 0
 #define WR_END 1
 
+typedef struct 
+{
+    int indeks;
+} Indeksi;
+
 void greska(const char *msg)
 {
     perror(msg);

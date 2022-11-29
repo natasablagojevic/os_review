@@ -56,6 +56,7 @@ int main(int argc, char **argv)
     get_dan(vreme->tm_wday);
 
     epoha += godina * 31556952;
+    // printf("epoha : %d\n", godina * 31556952);
 
     vreme = localtime(&epoha);
         if (vreme == NULL)
