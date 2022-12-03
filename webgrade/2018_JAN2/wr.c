@@ -21,7 +21,12 @@
 #define RD_END 0
 #define WR_END 1
 
-
+typedef struct 
+{
+    sem_t inDataReady;
+    sem_t dataProcessed;
+    char str[1024];
+} OsInputData;
 
 void greska(const char *msg)
 {
@@ -29,9 +34,40 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
+void *create_memory_block(char *path, unsigned size)
+{
+    int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
+        if (fd == -1)
+            greska("shm_open failed");
+
+    if (ftruncate(fd, size) == -1)
+        greska("ftruncate failed");
+
+    void *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        if (addr == MAP_FAILED)
+            greska("mmap failed");
+
+    close(fd);
+    return addr;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc != 2)
+        greska("args failed");
 
+    OsInputData *p = create_memory_block(argv[1], sizeof(OsInputData));
+
+    if (sem_init(&(p->inDataReady), 1, 0) == -1)
+        greska("sem_init failed");
+
+    strcpy(p->str, "NATASA");
+
+    if (sem_post(&(p->dataProcessed)) == -1)
+        greska("sem_post failed");
+
+    if (munmap(p, sizeof(OsInputData)) == -1)
+        greska("munmap failed");
 
 
     exit(EXIT_SUCCESS);

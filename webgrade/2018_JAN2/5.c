@@ -36,12 +36,12 @@ void greska(const char *msg)
 
 void *get_memory_block(char *path, unsigned *size)
 {
-    int fd = shm_open(path, O_RDWE, 0600);
+    int fd = shm_open(path, O_RDWR, 0600);
         if (fd == -1)
             greska("shm_open failed");
 
     struct stat sb;
-    if (fstat(path, &sb) == -1)
+    if (fstat(fd, &sb) == -1)
         greska("fstat failed");
 
     *size = sb.st_size;
@@ -56,7 +56,7 @@ void *get_memory_block(char *path, unsigned *size)
 
 void reverse(char *str)
 {
-    int n = strlen(s);
+    int n = strlen(str);
     char *pom = malloc(n+1);
         if (pom == NULL)
             greska("pom malloc failed");
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     unsigned size = 0;
     OsInputData *p = get_memory_block(argv[1], &size);
 
-    if (sem_init(&(p->inDataReady), 1, 1) == -1)
+    if (sem_wait(&(p->inDataReady)) == -1)
         greska("sem_init failed");
 
     reverse(p->str);
@@ -88,8 +88,8 @@ int main(int argc, char **argv)
     if (sem_post(&(p->dataProcessed)) == -1)
         greska("sem_post failed");
 
-    if (shm_unlink(argv[1]) == -1)
-        greska("shm_unlink failed");
+    // if (shm_unlink(argv[1]) == -1)
+    //     greska("shm_unlink failed");
 
     if (munmap(p, size) == -1)
         greska("munmap failed");
