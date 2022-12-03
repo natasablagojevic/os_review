@@ -100,7 +100,7 @@ void *function(void *arg)
     check_pthread(pthread_mutex_unlock(&lock), "mutex_unlock failed");
     
     free(buf);
-
+    fclose(f);
     return r;
 }
 
