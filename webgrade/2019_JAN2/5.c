@@ -24,8 +24,8 @@
 typedef struct 
 {
     sem_t inDataReady;
-    sem_t dataProcessed;
-    char str[1024];
+    int array[1024];
+    unsigned arrayLen;
 } OsInputData;
 
 void greska(const char *msg)
@@ -34,65 +34,63 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-void *create_memory_block(char *path, unsigned *size)
+void *get_memory_block(char *path, unsigned *size)
 {
-    int fd = shm_open(path, O_RDWE, 0600);
+    int fd = shm_open(path, O_RDWR, 0600);
         if (fd == -1)
             greska("shm_open failed");
 
     struct stat sb;
-    if (fstat(path, &sb) == -1)
+    if (fstat(fd, &sb) == -1)
         greska("fstat failed");
 
     *size = sb.st_size;
 
     void *addr = mmap(NULL, *size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-        if (addr == MAP_FAILED)
+        if (addr == -1)
             greska("mmap failed");
 
     close(fd);
     return addr;
 }
 
-void reverse(char *str)
+bool bar_4_jedinice(int broj)
 {
-    int n = strlen(s);
-    char *pom = malloc(n+1);
-        if (pom == NULL)
-            greska("pom malloc failed");
+    int n = 8 * sizeof(int);
+    unsigned int mask = 1 << (n-1);
+    int brojac = 0;
 
-    int k = 0;
-    for (int i = n-1; i >= 0; i--)
-        pom[k++] = str[i];
+    for (int i = 0; i < n; i++) {
+        if (broj & mask)
+            brojac++;
 
-    pom[k] = 0;
+        mask >>= 1;
+    }
 
-    strcpy(str, pom);
-    free(pom);
+    return brojac >= 4;
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 2)
+    if (argc != 3)
         greska("args failed");
 
     unsigned size = 0;
-    OsInputData *p = create_memory_block(argv[1], &size);
+    OsInputData *p = get_memory_block(argv[1], &size);
 
     if (sem_init(&(p->inDataReady), 1, 1) == -1)
         greska("sem_init failed");
 
-    reverse(p->str);
-    fprintf(stderr, "%s\n", p->str);
+    for 
 
-    if (sem_post(&(p->dataProcessed)) == -1)
+    if (sem_post(&(p->inDataReady)) == -1)
         greska("sem_post failed");
 
     if (shm_unlink(argv[1]) == -1)
         greska("shm_unlink failed");
 
     if (munmap(p, size) == -1)
-        greska("munmap failed");
+        greska("munmap");
 
 
     exit(EXIT_SUCCESS);
