@@ -80,11 +80,11 @@ int main(int argc, char **argv)
 
     double min = DBL_MAX;
 
-    for (unsigned i = 0; i < p->nPoints; i += 2) {
+    for (unsigned i = 0; i+2 < p->nPoints; i += 2) {
         double rastojanje = -1;
-        for (unsigned j = i+2; i < p->nPoints; j += 2) {
-            if (j+1 > p->nPoints)
-                break;
+        for (unsigned j = i+2; j+2 < p->nPoints; j += 2) {
+            // if (j+1 > p->nPoints)
+            //     break;
 
             rastojanje = kvadratno_rasotjanje(p->points[i], p->points[i+1], p->points[j], p->points[j+1]);
 
