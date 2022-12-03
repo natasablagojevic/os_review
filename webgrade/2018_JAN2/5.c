@@ -34,7 +34,7 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-void *create_memory_block(char *path, unsigned *size)
+void *get_memory_block(char *path, unsigned *size)
 {
     int fd = shm_open(path, O_RDWE, 0600);
         if (fd == -1)
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
         greska("args failed");
 
     unsigned size = 0;
-    OsInputData *p = create_memory_block(argv[1], &size);
+    OsInputData *p = get_memory_block(argv[1], &size);
 
     if (sem_init(&(p->inDataReady), 1, 1) == -1)
         greska("sem_init failed");
