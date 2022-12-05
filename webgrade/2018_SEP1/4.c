@@ -28,7 +28,7 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-int numbers_of_a(char *s)
+int counter_of_a(char *s)
 {
     int counter = 0;
     for (int i = 0; s[i] != 0; i++)
@@ -38,6 +38,7 @@ int numbers_of_a(char *s)
     return counter;
 }
 
+// a.out fifo1 fifo2 ..
 int main(int argc, char **argv)
 {
     if (argc <= 1)
@@ -54,18 +55,18 @@ int main(int argc, char **argv)
                 greska("open failed");
 
         fds[i].fd = fd;
-        fds[i].events = POLLIN | POLLERR | POLLHUP;
+        fds[i].events = POLLIN | POLLHUP | POLLERR;
         fds[i].revents = 0;
     }
 
     int activeFds = nFds;
+    char ime[1024];
     int max = INT_MIN;
-    char naziv[1024];
 
     while (activeFds) {
-        int ret_val = poll(fds, 10, -1);
+        int ret_val = poll(fds, nFds, -1);
             if (ret_val == -1)
-                greska("poll failed");
+                greska("poll malloc failed");
 
         for (int i = 0; i < nFds; i++) {
             if (fds[i].events & POLLIN) {
@@ -73,31 +74,31 @@ int main(int argc, char **argv)
                     if (f == NULL)
                         greska("fdopen failed");
 
-                int brojac = 0;
                 char *buf = NULL;
+                int counter = 0;
 
-                printf("passed\n");
                 while (fscanf(f, "%ms", &buf) == 1)
-                    brojac += numbers_of_a(buf);
+                    counter += counter_of_a(buf);
 
-                free(buf);
+                if (counter > max) {
+                    max = counter;
 
-                if (brojac > max) {
-                    max = brojac;
                     char *slash = strrchr(argv[i+1], '/');
-                        if (slash == NULL) {
-                            strcpy(naziv, argv[i+1]);
-                        } else {
+                        if (slash == NULL) 
+                            strcpy(ime, argv[i+1]);
+                        else {
                             slash++;
-                            strcpy(naziv, slash);
+                            strcpy(ime, slash);
                         }
                 }
+
+                free(buf);
             }
 
             if (fds[i].events & (POLLERR | POLLHUP)) {
                 close(fds[i].fd);
+                
                 fds[i].fd = -1;
-
                 fds[i].events = 0;
                 fds[i].revents = 0;
 
@@ -106,8 +107,8 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("%s %d\n", naziv, max);
-
+    printf("%s %d\n", ime, max);
+    
 
     free(fds);
     exit(EXIT_SUCCESS);
