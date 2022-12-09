@@ -133,27 +133,30 @@ int main()
         check_pthead(pthread_create(&tids[i], NULL, function, &idx[i]), "pthread_create");
     }
 
-    Result *result = malloc(sizeof(Result));
-        if (result == NULL)
-            greska("main: result malloc failed");
+    // Result *result = malloc(sizeof(Result));
+    //     if (result == NULL)
+    //         greska("main: result malloc failed");
 
     float max = FLT_MIN;
     int index = -1;
 
     for (int i = 0; i < k; i++){
+        Result *result = NULL;
         check_pthead(pthread_join(tids[i], (void **)&result), "pthread_join failed");
 
         if (result->resutl > max) {
             max = result->resutl;
             index = result->index;
         }
+
+        free(result);
     }
 
     printf("%d %f\n", index, max);
 
 
 
-    free(result);
+    // free(result);
     for (int i = 0; i < m; i++)
         free(a[i].array);
     free(a);
