@@ -76,7 +76,7 @@ int main(int argc, char **argv)
         if (dup2(cld2Par[WR_END], STDOUT_FILENO) == -1)
             greska("dup2 failed");
 
-        if (execlp("ls", "ls", "-l", NULL) == -1)
+        if (execlp("ls", "ls", "-l", argv[1], NULL) == -1)
             greska("execlp failed");
 
         close(cld2Par[WR_END]);
