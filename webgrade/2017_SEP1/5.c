@@ -76,21 +76,18 @@ int main(int argc, char **argv)
     unsigned size = 0;
     OsInputData *p = get_memory_blok(argv[1], &size);
 
-    if (sem_init(&(p->inDataReady), 1, 1) == -1)
-        greska("sem_inti failed");
+    if (sem_wait(&(p->inDataReady)) == -1)
+        greska("sem_wait failed");
 
     for (unsigned i = 0; i < p->arrayLen; i++)
         if (check(p->array[i]))
             printf("%d ", p->array[i]);
 
-    if (sem_post(&(p->inDataReady)) == -1)
-        greska("sem_post failed");
-
     if (munmap(p, size) == -1)
         greska("munmap failed");
 
-    if (shm_unlink(argv[1]) == -1)
-        greska("shm_unlink failed");
+    // if (shm_unlink(argv[1]) == -1)
+    //     greska("shm_unlink failed");
 
 
     exit(EXIT_SUCCESS);
