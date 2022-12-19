@@ -41,16 +41,16 @@ void print_time(char *s)
 
     sscanf(s, "%ms%ms%ms%ms%ms%ms%ms%ms%ms", &dri, &nbr, &user, &group, &size, &month, &day, &time, &file);
 
-    printf("%s\n", dri);
-    printf("%s\n", nbr);
-    printf("%s\n", user);
-    printf("%s\n", group);
-    printf("%s\n", size);
-    printf("%s\n", month);
-    printf("%s\n", day);
+    // printf("%s\n", dri);
+    // printf("%s\n", nbr);
+    // printf("%s\n", user);
+    // printf("%s\n", group);
+    // printf("%s\n", size);
+    // printf("%s\n", month);
+    // printf("%s\n", day);
     printf("%s\n", time);
-    printf("%s\n", file);
-    printf("--------------------------\n");
+    // printf("%s\n", file);
+    // printf("--------------------------\n");
 
     free(dri), free(nbr), free(user);
     free(group), free(size), free(month), free(day);
@@ -77,8 +77,14 @@ int main()
 
         char *linija = NULL;
         size_t size = 0;
+        int id = 1;
 
         while (getline(&linija, &size, f) != -1) {
+            if (id == 1) {
+                id = 0;
+                continue;
+            }
+        
             print_time(linija);
         }
 
