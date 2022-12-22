@@ -25,19 +25,20 @@
 
 typedef struct 
 {
+    int idx;
+    int num;
+} InputData;
+
+typedef struct 
+{
     int n;
-    float *array;
+    double *array;
 } Vector;
 
 typedef struct 
 {
-    int index;
-} Indexes;
-
-typedef struct 
-{
-    float resutl;
-    int index;
+    double result;
+    int idx;
 } Result;
 
 void greska(const char *msg)
@@ -46,7 +47,7 @@ void greska(const char *msg)
     exit(EXIT_FAILURE);
 }
 
-void check_pthead(int errNum, const char *msg)
+void check_pthread(int errNum, const char *msg)
 {
     int _err = errNum;
     if (_err > 0) {
@@ -56,42 +57,40 @@ void check_pthead(int errNum, const char *msg)
 }
 
 int m, n, k;
-Indexes *idx;
 Vector *a;
 
-float norma(Vector a)
+double norma(Vector a)
 {
-    float sum = 0.0;
+    double sum = 0.0;
     for (int i = 0; i < a.n; i++)
-        sum += pow(a.array[i], 2);
+        sum += (a.array[i]*a.array[i]);
 
     return sqrt(sum);
 }
 
 void *function(void *arg)
 {
-    Indexes *trenutni = (Indexes *)arg;
-    Result *result = malloc(sizeof(Result));
-        if (result == NULL)
-            greska("result malloc failed");
+    InputData *p = (InputData *)arg;
 
-    float locla_max = FLT_MIN;
-    // int index_max = -1;
+    double local_max = DBL_MIN;
+    int start = p->idx * p->num;
+    int end = start + p->num;
 
-    for (int i = 0; i < m/k; i++) {
-        float n = norma(a[i]);
+    for (int i = start; i < end; i++) {
+        double pom = norma(a[i]);
 
-        if (n > locla_max) {
-            locla_max = n;
-            // index_max = i;
-        }
+        if (pom > local_max)
+            local_max = pom;
     }
 
-    result->resutl = locla_max;
-    result->index = trenutni->index;
+    Result *r = malloc(sizeof(Result));
+        if (r == NULL)
+            greska("r malloc failed (function)");
 
-    return result;
+    r->result = local_max;
+    r->idx = p->idx;
 
+    return r;
 }
 
 int main()
@@ -102,64 +101,59 @@ int main()
         if (a == NULL)
             greska("a malloc failed");
 
-    idx = malloc(m * sizeof(Indexes));
-        if (idx == NULL)
-            greska("idx malloc failed");
-
     for (int i = 0; i < m; i++) {
         a[i].n = n;
-        idx[i].index = i;
-        a[i].array = malloc(n * sizeof(float));
-            if (a[i].array == NULL)
+        a[i].array = malloc(n * sizeof(double));
+            if (a[i].array == NULL) {
+                for (int j = 0; j < i; j++)
+                    free(a[j].array);
+                free(a);
                 greska("a[i].array malloc failed");
+            }
     }
 
     for (int i = 0; i < m; i++)
         for (int j = 0; j < n; j++)
-            scanf("%f", &a[i].array[j]);
-
-    // printf("------------\n");
-    // for (int i = 0; i < m; i++) {
-    //     for (int j = 0; j < n; j++)
-    //         printf("%f ", a[i].array[j]);
-    //     printf("\n");
-    // }
+            scanf("%lf", &a[i].array[j]);
 
     pthread_t *tids = malloc(k * sizeof(pthread_t));
         if (tids == NULL)
             greska("tids malloc failed");
 
+    InputData *indeks = malloc(k * sizeof(InputData));
+        if (indeks == NULL)
+            greska("idneks malloc failed");
+
     for (int i = 0; i < k; i++) {
-        check_pthead(pthread_create(&tids[i], NULL, function, &idx[i]), "pthread_create");
+        indeks[i].idx = i;
+        indeks[i].num = m/k;
+
+        check_pthread(pthread_create(&tids[i], NULL, function, &indeks[i]), "pthread_create failed");
     }
 
-    // Result *result = malloc(sizeof(Result));
-    //     if (result == NULL)
-    //         greska("main: result malloc failed");
+    double max = DBL_MIN;
+    int idx = -1;
 
-    float max = FLT_MIN;
-    int index = -1;
+    for (int i = 0; i < k; i++) {
+        Result *r = NULL;
 
-    for (int i = 0; i < k; i++){
-        Result *result = NULL;
-        check_pthead(pthread_join(tids[i], (void **)&result), "pthread_join failed");
+        check_pthread(pthread_join(tids[i], (void **)&r), "pthread_join failed");
 
-        if (result->resutl > max) {
-            max = result->resutl;
-            index = result->index;
+        if (r->result > max) {
+            max = r->result;
+            idx = r->idx;
         }
 
-        free(result);
+        free(r);
     }
 
-    printf("%d %f\n", index, max);
+    printf("%d %lf\n", idx, max);
 
 
-
-    // free(result);
     for (int i = 0; i < m; i++)
         free(a[i].array);
     free(a);
-    free(idx);
+    free(indeks);
+    free(tids);
     exit(EXIT_SUCCESS);
 }

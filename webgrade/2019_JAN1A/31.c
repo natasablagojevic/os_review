@@ -25,20 +25,20 @@
 
 typedef struct 
 {
+    int idx;
+    int num;
+} InputData;
+
+typedef struct 
+{
     int n;
-    float *array;
+    double *array;
 } Vector;
 
 typedef struct 
 {
+    double result;
     int idx;
-    int num;
-} Input;
-
-typedef struct 
-{
-    float max;
-    int index;
 } Result;
 
 void greska(const char *msg)
@@ -56,46 +56,41 @@ void check_pthread(int errNum, const char *msg)
     }
 }
 
-float norma(Vector a)
-{
-    float sum = 0.0;
-    for (int i = 0; i < a.n; i++)
-        sum += pow(a.array[i], 2);
-
-    return sqrt(sum);
-}
 int m, n, k;
 Vector *a;
 
+double norma(Vector a)
+{
+    double sum = 0.0;
+    for (int i = 0; i < a.n; i++)
+        sum += (a.array[i]*a.array[i]);
+
+    return sqrt(sum);
+}
+
 void *function(void *arg)
 {
-    Input *trenutna = (Input *)arg;
+    InputData *p = (InputData *)arg;
 
-    int start = trenutna->idx;
-    int end = start + trenutna->num;
-
-    float Norma = 0.0;
-    float max = FLT_MIN;
-    int index = -1;
+    double local_max = DBL_MIN;
+    int start = p->idx * p->num;
+    int end = start + p->num;
 
     for (int i = start; i < end; i++) {
-        Norma = norma(a[i]);
+        double pom = norma(a[i]);
 
-        if (Norma > max) {
-            max = Norma;
-            index = i;
-        }
+        if (pom > local_max)
+            local_max = pom;
     }
 
-    /* ------------------------------------ */
-    Result *result = malloc(sizeof(Result));
-        if (result == NULL)
-            greska("result malloc failed");
+    Result *r = malloc(sizeof(Result));
+        if (r == NULL)
+            greska("r malloc failed (function)");
 
-    result->index = trenutna->idx;
-    result->max = max;
+    r->result = local_max;
+    r->idx = p->idx;
 
-    return result; 
+    return r;
 }
 
 int main()
@@ -108,7 +103,7 @@ int main()
 
     for (int i = 0; i < m; i++) {
         a[i].n = n;
-        a[i].array = malloc(n * sizeof(float));
+        a[i].array = malloc(n * sizeof(double));
             if (a[i].array == NULL) {
                 for (int j = 0; j < i; j++)
                     free(a[j].array);
@@ -119,54 +114,46 @@ int main()
 
     for (int i = 0; i < m; i++)
         for (int j = 0; j < n; j++)
-            scanf("%f", &a[i].array[j]);
-
-
-    // printf("------------------\n");
-    // for (int i = 0; i < m; i++) {
-    //     for (int j = 0; j < n; j++)
-    //         printf("%f ", a[i].array[j]);
-    //     printf("\n");
-    // }
-
-    Input *idx = malloc(k * sizeof(Input));
-        if (idx == NULL)
-            greska("idx malloc failed");
+            scanf("%lf", &a[i].array[j]);
 
     pthread_t *tids = malloc(k * sizeof(pthread_t));
         if (tids == NULL)
             greska("tids malloc failed");
 
-    for (int i = 0; i < k; i++) {
-        idx[i].idx = i;
-        idx[i].num = k;
+    InputData *indeks = malloc(k * sizeof(InputData));
+        if (indeks == NULL)
+            greska("idneks malloc failed");
 
-        check_pthread(pthread_create(&tids[i], NULL, function, &idx[i]), "pthread_create failed");
+    for (int i = 0; i < k; i++) {
+        indeks[i].idx = i;
+        indeks[i].num = m/k;
+
+        check_pthread(pthread_create(&tids[i], NULL, function, &indeks[i]), "pthread_create failed");
     }
 
-    int index = -1;
-    float max = FLT_MIN;
+    double max = DBL_MIN;
+    int idx = -1;
 
     for (int i = 0; i < k; i++) {
-        Result *result = NULL;
+        Result *r = NULL;
 
-        check_pthread(pthread_join(tids[i], (void **)&result), "pthread_join failed");
+        check_pthread(pthread_join(tids[i], (void **)&r), "pthread_join failed");
 
-        if (result->max > max) {
-            max = result->max;
-            index = result->index;
+        if (r->result > max) {
+            max = r->result;
+            idx = r->idx;
         }
 
-        free(result);
+        free(r);
     }
 
-    printf("%d %f\n", index, max);
+    printf("%d %lf\n", idx, max);
 
 
-    free(tids);
-    free(idx);
     for (int i = 0; i < m; i++)
         free(a[i].array);
     free(a);
+    free(indeks);
+    free(tids);
     exit(EXIT_SUCCESS);
 }
