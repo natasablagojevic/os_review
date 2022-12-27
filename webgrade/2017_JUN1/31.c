@@ -186,15 +186,12 @@ int main()
     for (int i = 0; i < n; i++)
         free(idx[i]);
     free(idx);
-
     for (int i = 0; i < n; i++)
         free(tids[i]);
     free(tids);
-    
     for (int i = 0; i < m2; i++)
         free(b[i]);
     free(b);
-    
     for (int i = 0; i < n; i++)
         free(a[i]);
     free(a);
