@@ -47,17 +47,21 @@ int main(int argc, char **argv)
 
     while (fscanf(f, "%s", buf) == 1) {
         if (strcmp(buf, argv[1])) {
-            lock.l_whence = SEEK_SET;
-            lock.l_start = ftell(f);
-            lock.l_len = -strlen(buf);
+            continue;
+        }
 
-            if (fcntl(fd, F_GETLK, &lock) == -1)
-                greska("fcntl failed");
 
-            switch (lock.l_type) {
-                case F_RDLCK: printf("%ld r\n", ftell(f) - strlen(buf)); break;
-                case F_WRLCK: printf("%ld w\n", ftell(f) - strlen(buf)); break;
-            }
+        lock.l_type = F_UNLCK;
+        lock.l_whence = SEEK_SET;
+        lock.l_start = ftell(f);
+        lock.l_len = -strlen(argv[2]);
+
+        if (fcntl(fd, F_GETLK, &lock) == -1)
+            greska("fcntl failed");
+
+        switch (lock.l_type) {
+            case F_RDLCK: printf("%ld r\n", ftell(f) - strlen(argv[2])); break;
+            case F_WRLCK: printf("%ld w\n", ftell(f) - strlen(argv[2])); break;
         }
     }
 
