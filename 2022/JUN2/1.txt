@@ -1,0 +1,4 @@
+ls -l
+tail 1.txt
+stat ...
+head 1.txt
