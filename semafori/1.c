@@ -67,11 +67,11 @@ int main(int argc, char **argv)
     unsigned size = 0;
     OsInputData *p = get_memory_block(argv[1], &size);
 
-    // if (sem_wait(&(p->ready)) == -1)
-    //     greska("sem_wait failed");
+    if (sem_wait(&(p->ready)) == -1)
+        greska("sem_wait failed");
     
-    if (sem_init(&(p->ready), 1, 1) == -1)
-        greska("sem_init failed");
+    // if (sem_init(&(p->ready), 1, 1) == -1)
+    //     greska("sem_init failed");
 
     double min = DBL_MAX;
     double x = DBL_MAX;
@@ -79,11 +79,11 @@ int main(int argc, char **argv)
     for (unsigned i = 0; i < p->nPoints; i += 2) {
         for (unsigned j = 0; i != j && j < p->nPoints; j += 2) {
             x = rastojanje(p->points[i], p->points[i+1], p->points[j], p->points[j+1]);
-            printf("x: %lf\n", x);
+            // printf("x: %lf\n", x);
             if (x < min)
                 min = x;
 
-            printf("\tmin: %lf\n", min);
+            // printf("\tmin: %lf\n", min);
         }
     }
 
