@@ -30,7 +30,7 @@ void greska(const char *msg)
 {
     perror(msg);
     exit(EXIT_FAILURE);
-}
+} 
 
 void *get_memory_block(char *path, unsigned *size)
 {
