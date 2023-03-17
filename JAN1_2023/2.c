@@ -70,6 +70,8 @@ int main(int argc, char **argv)
   ekstenzija = malloc(strlen(argv[2]) + 1);
     if (ekstenzija == NULL)
       greska("ekstenzija malloc failed");
+	
+  strcpy(ekstenzija, argv[2]);
     
   if (time(&now) == -1)
     greska("time failed");
